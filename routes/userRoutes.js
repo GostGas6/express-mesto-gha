@@ -1,10 +1,11 @@
+const userRouter = require('express').Router();
+
 const {
   createUser,
   getAllUsers,
   getUser,
-  updateUser
-} = require('../controllers/user.js');
-const userRouter = require('express').Router();
+  updateUser,
+} = require('../controllers/user');
 
 const {
   USER_PATH = '/users',
@@ -16,4 +17,4 @@ userRouter.get(`${USER_PATH}/:id`, getUser);
 userRouter.patch(`${USER_PATH}/me`, updateUser);
 userRouter.patch(`${USER_PATH}/me/avatar`, updateUser);
 
-module.exports = userRouter
+module.exports = userRouter;
