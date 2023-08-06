@@ -1,12 +1,19 @@
 const {
   createUser,
   getAllUsers,
-  getUser
+  getUser,
+  updateUser
 } = require('../controllers/user.js');
 const userRouter = require('express').Router();
 
-userRouter.post('/users', createUser);
-userRouter.get('/users', getAllUsers);
-userRouter.get('/users/:id', getUser);
+const {
+  USER_PATH = '/users',
+} = process.env;
+
+userRouter.post(`${USER_PATH}`, createUser);
+userRouter.get(`${USER_PATH}`, getAllUsers);
+userRouter.get(`${USER_PATH}/:id`, getUser);
+userRouter.patch(`${USER_PATH}/me`, updateUser);
+userRouter.patch(`${USER_PATH}/me/avatar`, updateUser);
 
 module.exports = userRouter

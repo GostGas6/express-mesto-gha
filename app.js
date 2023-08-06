@@ -3,11 +3,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userRouter = require('./routes/userRoutes');
+const cardRouter = require('./routes/cardRoutes');
+const { StatusCodes } = require('http-status-codes');
 
 const {
   PORT = 3000,
   BASE_PATH = 'http://localhost',
-  MONGODB_URL = 'mongodb://localhost:27017/mestodb' } = process.env;
+  MONGODB_URL = 'mongodb://localhost:27017/mestodb '
+} = process.env;
 
 mongoose.connect(MONGODB_URL, {
   useNewUrlParser: true,
@@ -28,6 +31,14 @@ app.use((req, res, next) => {
 });
 // routers
 app.use('/', userRouter);
+app.use('/', cardRouter);
+// app.use('*', (req, res) => {
+//   res
+//     .status(StatusCodes.NOT_FOUND)
+//     .send({
+//       message: 'URI не найден.'
+//     })
+// })
 
 app.listen(PORT, () => {
   console.log('Ссылка на сервер');
