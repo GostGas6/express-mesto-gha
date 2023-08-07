@@ -32,8 +32,7 @@ module.exports.getAllUsers = (req, res) => {
 module.exports.getUser = (req, res) => {
   const userId = req.params.id;
   User.findById(userId)
-    .orFail(() => {
-    })
+    .orFail()
     .then((user) => {
       res
         .status(StatusCodes.OK)
@@ -64,8 +63,7 @@ module.exports.updateUser = (req, res) => {
     runValidators: true,
     upsert: false,
   })
-    .orFail(() => {
-    })
+    .orFail()
     .then((user) => {
       res
         .status(StatusCodes.OK)

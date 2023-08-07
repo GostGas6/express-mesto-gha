@@ -4,6 +4,13 @@ const {
   StatusCodes,
 } = require('http-status-codes');
 
+const defaults = {
+  notFoundMessage: 'Объект не найден',
+  badRequestMessage: 'ID объекта не валидный',
+  invalidRequestMessage: 'Переданные данные не валидны',
+  defaultMessage: 'Непредвиденная ошибка сервера',
+};
+
 module.exports.handleError = (
   error,
   res,
@@ -14,39 +21,36 @@ module.exports.handleError = (
     defaultMessage: '',
   },
 ) => {
-  const restoredConfig = {
+  const messages = {
+    defaults,
     ...config,
-    notFoundMessage: config.notFoundMessage || 'Объект не найден',
-    badRequestMessage: config.badRequestMessage || 'ID объекта не валидный',
-    invalidRequestMessage: config.invalidRequestMessage || 'Переданные данные не валидны',
-    defaultMessage: config.defaultMessage || 'Непредвиденная ошибка сервера',
   };
   if (error instanceof mongoose.Error.DocumentNotFoundError) {
     res
       .status(StatusCodes.NOT_FOUND)
       .send({
-        message: restoredConfig.notFoundMessage,
+        message: messages.notFoundMessage,
         details: error.message ? error.message : '',
       });
   } else if (error instanceof mongoose.Error.CastError) {
     res
       .status(StatusCodes.BAD_REQUEST)
       .send({
-        message: restoredConfig.badRequestMessage,
+        message: messages.badRequestMessage,
         details: error.message ? error.message : '',
       });
   } else if (error instanceof mongoose.Error.ValidationError) {
     res
       .status(StatusCodes.BAD_REQUEST)
       .send({
-        message: restoredConfig.invalidRequestMessage,
+        message: messages.invalidRequestMessage,
         details: error.message ? error.message : '',
       });
   } else {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send({
-        message: restoredConfig.defaultMessage,
+        message: messages.defaultMessage,
         details: error.message ? error.message : '',
       });
   }
