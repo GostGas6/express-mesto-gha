@@ -14,17 +14,13 @@ const defaults = {
 module.exports.handleError = (
   error,
   res,
-  config = {
-    notFoundMessage: '',
-    badRequestMessage: '',
-    invalidRequestMessage: '',
-    defaultMessage: '',
-  },
+  config,
 ) => {
   const messages = {
-    defaults,
     ...config,
+    ...defaults,
   };
+
   if (error instanceof mongoose.Error.DocumentNotFoundError) {
     res
       .status(StatusCodes.NOT_FOUND)
