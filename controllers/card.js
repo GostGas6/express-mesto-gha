@@ -3,53 +3,41 @@ const {
 } = require('http-status-codes');
 
 const Card = require('../models/card');
-const { handleError } = require('../utils/handleError');
+const { handleRequestErrors } = require('../errors/handleRequestErrors');
+const ForbiddenError = require('../errors/classes/forbiddenError');
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   Card.create({
     ...req.body,
     owner: req.user._id,
   })
-    .then((user) => {
+    .then((card) => {
       res
         .status(StatusCodes.CREATED)
-        .send(user);
+        .send(card);
     })
     .catch((error) => {
-      handleError(error, res, {
-        invalidRequestMessage: 'Не удалось создать карточку места. Данные не валидны',
-      });
+      handleRequestErrors(
+        error,
+        next,
+        {
+          invalidRequestMessage: 'Не удалось создать карточку места',
+        },
+      );
     });
 };
 
-module.exports.getAllCards = (req, res) => {
+module.exports.getAllCards = (req, res, next) => {
   Card.find({})
-    .then((result) => {
-      res.status(StatusCodes.OK).send(result);
+    .then((card) => {
+      res.status(StatusCodes.OK).send(card);
     })
     .catch((error) => {
-      handleError(error, res);
+      handleRequestErrors(error, res, next);
     });
 };
 
-// module.exports.getCard = (req, res) => {
-//   const cardId = req.params.id;
-//   Card.findById(cardId)
-//     .orFail()
-//     .then((user) => {
-//       res
-//         .status(StatusCodes.OK)
-//         .send(user);
-//     })
-//     .catch((error) => {
-//       handleError(error, res, {
-//         notFoundMessage: `Карточка места с ID ${cardId} не найдена`,
-//         badRequestMessage: `Карточка места с с ID ${cardId} не валиднa`,
-//       });
-//     });
-// };
-
-module.exports.handleLike = (req, res) => {
+module.exports.handleLike = (req, res, next) => {
   const cardId = req.params.id;
   let action;
   switch (req.method) {
@@ -71,32 +59,46 @@ module.exports.handleLike = (req, res) => {
   )
     .orFail()
     .populate([{ path: 'likes', model: 'user' }])
-    .then((user) => {
+    .then((card) => {
       res
         .status(StatusCodes.OK)
-        .send(user);
+        .send(card);
     })
     .catch((error) => {
-      handleError(error, res, {
-        notFoundMessage: `Карточка места с ID ${cardId} не найдена`,
-        badRequestMessage: `Карточка места с с ID ${cardId} не валиднa`,
-      });
+      handleRequestErrors(
+        error,
+        next,
+        {
+          notFoundMessage: `Карточка места с ID ${cardId} не найдена`,
+          badRequestMessage: `Карточка места с с ID ${cardId} не валиднa`,
+        },
+      );
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   const cardId = req.params.id;
-  Card.findByIdAndRemove(cardId)
+  Card.findById(cardId)
     .orFail()
-    .then((user) => {
-      res
-        .status(StatusCodes.OK)
-        .send(user);
+    .then((card) => {
+      if (req.user._id !== card.owner.toString()) {
+        return Promise.reject(new ForbiddenError('Нельзя удалять чужие карточки'));
+      }
+      Card.findByIdAndRemove(card._id)
+        .then((deletedCard) => {
+          res
+            .status(StatusCodes.OK)
+            .send(deletedCard);
+        });
     })
     .catch((error) => {
-      handleError(error, res, {
-        notFoundMessage: `Карточка места с ID ${cardId} не найдена`,
-        badRequestMessage: `Карточка места с с ID ${cardId} не валиднa`,
-      });
+      handleRequestErrors(
+        error,
+        next,
+        {
+          notFoundMessage: `Карточка места с ID ${cardId} не найдена`,
+          badRequestMessage: `Карточка места с с ID ${cardId} не валиднa`,
+        },
+      );
     });
 };

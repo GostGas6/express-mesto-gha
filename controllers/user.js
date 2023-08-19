@@ -3,33 +3,19 @@ const {
 } = require('http-status-codes');
 
 const User = require('../models/user');
-const { handleError } = require('../utils/handleError');
+const { handleRequestErrors } = require('../errors/handleRequestErrors');
 
-module.exports.createUser = (req, res) => {
-  User.create(req.body)
-    .then((user) => {
-      res
-        .status(StatusCodes.CREATED)
-        .send(user);
-    })
-    .catch((error) => {
-      handleError(error, res, {
-        invalidRequestMessage: 'Не удалось создать пользователя. Данные не валидны',
-      });
-    });
-};
-
-module.exports.getAllUsers = (req, res) => {
+module.exports.getAllUsers = (req, res, next) => {
   User.find({})
     .then((result) => {
       res.status(StatusCodes.OK).send(result);
     })
     .catch((error) => {
-      handleError(error, res);
+      handleRequestErrors(error, next);
     });
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   const userId = req.params.id;
   User.findById(userId)
     .orFail()
@@ -39,14 +25,39 @@ module.exports.getUser = (req, res) => {
         .send(user);
     })
     .catch((error) => {
-      handleError(error, res, {
-        notFoundMessage: `Пользователь с ID ${userId} не найден`,
-        badRequestMessage: `Пользователь с ID ${userId} не валиден`,
-      });
+      handleRequestErrors(
+        error,
+        next,
+        {
+          notFoundMessage: `Пользователь с ID ${userId} не найден`,
+          badRequestMessage: `Пользователь с ID ${userId} не валиден`,
+        },
+      );
     });
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
+  const userId = req.user._id;
+  User.findById(userId)
+    .orFail()
+    .then((user) => {
+      res
+        .status(StatusCodes.OK)
+        .send(user);
+    })
+    .catch((error) => {
+      handleRequestErrors(
+        error,
+        next,
+        {
+          notFoundMessage: `Пользователь с ID ${userId} не найден`,
+          badRequestMessage: `Пользователь с ID ${userId} не валиден`,
+        },
+      );
+    });
+};
+
+module.exports.updateUser = (req, res, next) => {
   const userId = req.user._id;
   let userInfo;
   if (req.path.includes('avatar')) {
@@ -70,10 +81,13 @@ module.exports.updateUser = (req, res) => {
         .send(user);
     })
     .catch((error) => {
-      handleError(error, res, {
-        notFoundMessage: `Пользователь с ID ${userId} не найден`,
-        badRequestMessage: `Пользователь с ID ${userId} не валиден`,
-        // invalidRequestMessage: 'Переданные данные не валидны',
-      });
+      handleRequestErrors(
+        error,
+        next,
+        {
+          notFoundMessage: `Пользователь с ID ${userId} не найден`,
+          badRequestMessage: `Пользователь с ID ${userId} не валиден`,
+        },
+      );
     });
 };
