@@ -44,8 +44,8 @@ userRouter.patch(
   auth,
   celebrate({
     body: Joi.object().keys({
-      name: validateShortString(),
-      about: validateShortString(),
+      name: validateShortString().required(),
+      about: validateShortString().required(),
     }),
   }),
   updateUser,
