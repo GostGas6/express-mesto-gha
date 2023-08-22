@@ -20,9 +20,11 @@ const defaults = {
 module.exports.handleRequestErrors = (
   error,
   next,
+  config,
 ) => {
   const messages = {
     ...defaults,
+    ...config,
   };
   if (error instanceof mongoose.Error.DocumentNotFoundError) {
     next(new NotFoundError(messages.notFoundMessage, error.message));
